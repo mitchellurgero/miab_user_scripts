@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 /***********************************/
 /* Do not modify past this point! */
@@ -16,23 +17,42 @@ if(php_sapi_name() !== 'cli'){
 $config = new CommandLine();
 $args = $config->parseArgs($argv);
 
-//Check that we have all args.
-if(!isset($args['hostname'], $args['username'], $args['current-domain'], $args['new-domain'])){
-	die($red."You are missing command line arguments! Please try again! $white \r\n");
-}
 //Begin program output.
-echo 'User Copy for Mail-In-A-Box Version 0.1
+echo 'User Script for Mail-In-A-Box Version 0.1
 =======================================
 
 This script was built by:
 Mitchell Urgero <info@urgero.org> of URGERO.ORG.
 
-This script does NOT transfer mail. It only makes new users based on old usernames.
-Each user will get a randomly generated password for their new user account.
-Once the process is done, you will need to confirm the new user accounts were created!
-This process will overwrite a user if it already exists on the new domain.
-
 ';
+
+
+//Check that we have all args.
+if(!isset($args['type']) && !isset($args['help'])){
+	die($red."You are missing command line arguments! Please try again! $white \r\n");
+} elseif(isset($args['help'])) {
+echo '
+    Required Arguments:
+        --type=        Select type you want to run.
+                       Options: usercopy
+        
+        --hostname=    Hostname of MIAB server.
+        
+        --username=    Username of an admin account on
+                       MIAB server.
+    
+    Type Argument Options:
+        --type=usercopy
+            Copy users from one domain to another. Does NOT copy user mail!
+            --current-domain=    The current domain to copy users from.
+            --new-domain=        The new domain to copy users to.
+            
+';
+	die();
+}
+if(!isset($args['hostname'], $args['username'])){
+	die($red."You are missing command line arguments! Please try again! $white \r\n");
+}
 
 echo $red."This script is provided AS-IS. By typing 'continue' you agree that this script,\r\nand it's creator is not held liable for any damages done: $white";
 $confirmation = readline();
@@ -45,39 +65,59 @@ echo $yellow."Please enter your admin password [hidden]: $white";
 $password = readline_silent();
 $username = $args['username'];
 
-write($white,"Getting list of all users on the box.");
-$domains = getCurrentDomains();
-//var_dump($users);
-if($domains == 0){
-	die($yellow."There was an error trying to authenticate. Please try again.$white \r\n");
-}
-if(count($domains) > 0){
-	//We have multiple (or single) domains, lets copy.
-	$cur = $args['current-domain'];
-	$new = $args['new-domain'];
-	write($white,"Processing current user list...");
-	foreach($domains as $domain){
-		if($domain['domain'] == $cur){
-			foreach($domain['users'] as $user){
-				if($user['status'] == "active"){
-					//Make new user!
-					$temp = explode("@",$user['email']);
-					$newUser = $temp[0]."@".$new; //new email!
-					$newPass = generateRandomString(12); //new pass!
-					if(makeNewUser($newUser,$newPass)){
-						write($green, "Made new user $newUser. [$newPass]");
-					} else {
-						write($red,"Error makeing user $newUser");
+switch($args['type']){
+	case "usercopy":
+		if(!isset($args['current-domain'], $args['new-domain'])){
+			die($red."You are missing command line arguments! Please try again! $white \r\n");
+		}
+		echo '
+This script does NOT transfer mail. It only makes new users based on old usernames.
+Each user will get a randomly generated password for their new user account.
+Once the process is done, you will need to confirm the new user accounts were created!
+This process will overwrite a user if it already exists on the new domain.
+
+';
+		write($white,"Getting list of all users on the box.");
+		$domains = getCurrentDomains();
+		//var_dump($users);
+		if($domains == 0){
+			die($yellow."There was an error trying to authenticate. Please try again.$white \r\n");
+		}
+		if(count($domains) > 0){
+			//We have multiple (or single) domains, lets copy.
+			$cur = $args['current-domain'];
+			$new = $args['new-domain'];
+			write($white,"Processing current user list from $cur...");
+			foreach($domains as $domain){
+				if($domain['domain'] == $cur){
+					foreach($domain['users'] as $user){
+						if($user['status'] == "active"){
+							//Make new user!
+							$temp = explode("@",$user['email']);
+							$newUser = $temp[0]."@".$new; //new email!
+							$newPass = generateRandomString(12); //new pass!
+							if(makeNewUser($newUser,$newPass)){
+								write($green, "Made new user $newUser. [$newPass]");
+							} else {
+								write($red,"Error makeing user $newUser");
+							}
+						} else {
+							write($yellow, "User $user is not active. Ignoring.");
+						}	
 					}
 				} else {
-					write($yellow, "User $user is not active. Ignoring.");
-				}	
+					continue; //no further processing.
+				}
 			}
-		} else {
-			continue; //no further processing.
 		}
-	}
+		break;
+	default:
+		die($red."You are missing command line arguments! Please try again! $white \r\n");
+		break;
+	
 }
+
+
 function makeNewUser($u, $p){
 	global $args,$username,$password;
 	$fields_string = "";
