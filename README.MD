@@ -22,3 +22,10 @@ To use this script, you must edit the configuration below, then run
 in your console. Any computer with PHP7+ will work fine with this tool.
 Once the tool starts, it will ask you to confirm before continuing. 
 
+# User Archive
+
+As it says on the tin, we archive all users in a given domain.
+
+**Will archive the whole domain!!**
+
+`php miabscript.php --type=archive --host="box.example.com" --username="admin@example.com" --current-domain="example.net"`

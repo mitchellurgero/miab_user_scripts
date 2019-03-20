@@ -47,7 +47,10 @@ echo '
             Copy users from one domain to another. Does NOT copy user mail!
             --current-domain=    The current domain to copy users from.
             --new-domain=        The new domain to copy users to.
-            
+        
+        --type=archive
+            Archive all users in a given domain
+            --current-domain=    The domain you want to archive.
 ';
 	die();
 }
@@ -112,13 +115,72 @@ This process will overwrite a user if it already exists on the new domain.
 			}
 		}
 		break;
+	case "archive":
+		echo '
+This script will archive a whole domain!
+This script will also not delete aliases!
+
+';
+		echo $red."Are you sure you want to continue?[y/n]$white";
+		$conf = readline();
+		
+		if(strtolower($conf) == "y"){
+			if(!isset($args['current-domain'])){
+				die($red."You are missing command line arguments! Please try again! $white \r\n");
+			}
+			$cur = $args['current-domain'];
+			write($white,"Getting list of all users on the box.");
+			$domains = getCurrentDomains();
+			foreach($domains as $domain){
+				if($domain['domain'] == $cur){
+					write($white,"Processing current user list from $cur...");
+					foreach($domain['users'] as $user){
+						if(archiveUser($user['email'])){
+							write($green, "Archived user ".$user['email'].".");
+						} else {
+							write($red, "Error archiving user ".$user['email']. ". Check logs for details.");
+						}
+					}
+				}
+			}
+		} else {
+			die($yellow."Action cancelled!$white \r\n");
+		}
+		break;
 	default:
 		die($red."You are missing command line arguments! Please try again! $white \r\n");
 		break;
 	
 }
 
-
+function archiveUser($u){
+	global $args,$username,$password;
+	$fields_string = "";
+	$url = "https://".$args['hostname']."/admin/mail/users/remove";
+	$fields = array(
+		"email"    => urlencode($u)
+		);
+	foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
+	rtrim($fields_string, '&');
+	
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch,CURLOPT_POST, count($fields));
+	curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+	curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+	$data = curl_exec($ch);
+	curl_close($ch);
+	
+	if($data){
+		return true;
+	} else {
+		return false;
+	}
+	
+}
 function makeNewUser($u, $p){
 	global $args,$username,$password;
 	$fields_string = "";
