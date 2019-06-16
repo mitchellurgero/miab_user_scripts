@@ -47,7 +47,8 @@ echo '
             Copy users from one domain to another. Does NOT copy user mail!
             --current-domain=    The current domain to copy users from.
             --new-domain=        The new domain to copy users to.
-	    --word=              The password to set for the new user accounts. (NOT SECURE)
+	    --word=              The password to set for the new user accounts.
+	                         (NOT SECURE)(Must be 7+ characters)
         
         --type=archive
             Archive all users in a given domain
