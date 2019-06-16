@@ -35,7 +35,7 @@ if(!isset($args['type']) && !isset($args['help'])){
 echo '
     Required Arguments:
         --type=        Select type you want to run.
-                       Options: usercopy
+                       Options: usercopy, archive
         
         --hostname=    Hostname of MIAB server.
         
@@ -47,6 +47,7 @@ echo '
             Copy users from one domain to another. Does NOT copy user mail!
             --current-domain=    The current domain to copy users from.
             --new-domain=        The new domain to copy users to.
+	    --word=              The password to set for the new user accounts. (NOT SECURE)
         
         --type=archive
             Archive all users in a given domain
@@ -100,6 +101,14 @@ This process will overwrite a user if it already exists on the new domain.
 							$temp = explode("@",$user['email']);
 							$newUser = $temp[0]."@".$new; //new email!
 							$newPass = generateRandomString(12); //new pass!
+							if(isset($args['word'])){
+								if(strlen($args['word']) > 7){
+									$newPass = $args['word'];
+								} else {
+									write($red,"Error, word argument not long enough.");
+									die();
+								}
+							}
 							if(makeNewUser($newUser,$newPass)){
 								write($green, "Made new user $newUser. [$newPass]");
 							} else {
