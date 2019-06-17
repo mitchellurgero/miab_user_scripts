@@ -17,7 +17,7 @@ https://github.com/imapsync/imapsync**
 
 To use this script, you must edit the configuration below, then run
 
-`php miabscript.php --type=usercopy --host="box.example.com" --username="admin@example.com" --current-domain="example.net" --new-domain="example.org"`
+`php miabscript.php --type=usercopy --hostname="box.example.com" --username="admin@example.com" --current-domain="example.net" --new-domain="example.org"`
 
 in your console. Any computer with PHP7+ will work fine with this tool.
 Once the tool starts, it will ask you to confirm before continuing. 
@@ -28,4 +28,4 @@ As it says on the tin, we archive all users in a given domain.
 
 **Will archive the whole domain!!**
 
-`php miabscript.php --type=archive --host="box.example.com" --username="admin@example.com" --current-domain="example.net"`
+`php miabscript.php --type=archive --hostname="box.example.com" --username="admin@example.com" --current-domain="example.net"`
